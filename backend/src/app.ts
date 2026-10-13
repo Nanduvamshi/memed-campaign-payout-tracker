@@ -7,8 +7,9 @@ import { campaignRoutes } from "./routes/campaignRoutes";
 import { submissionRoutes } from "./routes/submissionRoutes";
 
 export const app = express();
+const clientOrigin = new URL(env.CLIENT_ORIGIN).origin;
 
-app.use(cors({ origin: env.CLIENT_ORIGIN }));
+app.use(cors({ origin: clientOrigin }));
 app.use(express.json({ limit: "32kb" }));
 app.get("/health", (_request, response) => response.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);

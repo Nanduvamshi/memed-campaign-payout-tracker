@@ -1,7 +1,7 @@
 import { readAuth } from "./auth";
 import type { Campaign, Submission, User } from "../types";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/+$/, "");
 
 type RequestOptions = Omit<RequestInit, "body"> & { body?: unknown };
 
