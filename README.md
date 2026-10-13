@@ -109,9 +109,17 @@ Tests run with `MongoMemoryReplSet`, which gives Jest an ephemeral MongoDB repli
 
 ## Deployment
 
-- Deploy `frontend` to Vercel and set `NEXT_PUBLIC_API_URL` to the deployed API URL.
-- Deploy `backend` to Render with `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, and `CLIENT_ORIGIN` configured.
-- Set `CLIENT_ORIGIN` to the deployed Vercel URL and allow the Render service's environment to connect to MongoDB Atlas.
+### Backend: Railway
+
+1. In Railway, create a project and add a service from this GitHub repository.
+2. Set the service **Root Directory** to `/backend` and set its config file path to `/backend/railway.toml`.
+3. Railway uses the committed configuration to install packages, build the API, start it, and verify `GET /health` before routing traffic.
+4. Add `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN=7d`, and `CLIENT_ORIGIN` in the Railway service Variables tab.
+5. Generate a public Railway domain and set `CLIENT_ORIGIN` to the deployed Vercel frontend URL once it exists.
+
+### Frontend: Vercel
+
+Deploy `frontend` to Vercel, set the Vercel project root directory to `frontend`, and configure `NEXT_PUBLIC_API_URL` with the generated Railway API URL. Redeploy the frontend after setting this variable.
 
 ## Scaling Note
 
