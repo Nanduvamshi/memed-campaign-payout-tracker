@@ -69,3 +69,20 @@ describe("view update API", () => {
     expect(updatedSubmissions.reduce((total, submission) => total + submission.payoutGranted, 0)).toBe(500);
   });
 });
+
+describe("submission API", () => {
+  it("rejects the same post URL submitted twice to one campaign", async () => {
+    await Submission.init();
+    const brand = await User.create({ name: "Brand", email: "brand5@memed.test", role: "brand", passwordHash: "hash" });
+    const creator = await User.create({ name: "Creator", email: "creator5@memed.test", role: "creator", passwordHash: "hash" });
+    const campaign = await Campaign.create({ brand: brand.id, name: "Launch", platform: "instagram", totalBudget: 5_000, milestones: [{ viewThreshold: 10_000, payout: 500 }] });
+    const auth = { Authorization: `Bearer ${tokenFor(creator.id, "creator")}` };
+    const body = { campaignId: campaign.id, postUrl: "https://instagram.com/p/repeat" };
+
+    await request(app).post("/api/submissions").set(auth).send(body).expect(201);
+    const repeat = await request(app).post("/api/submissions").set(auth).send(body);
+
+    expect(repeat.status).toBe(409);
+    expect(await Submission.countDocuments({ campaign: campaign.id })).toBe(1);
+  });
+});

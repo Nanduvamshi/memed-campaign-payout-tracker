@@ -47,6 +47,9 @@ submissionRoutes.post(
   asyncHandler(async (request, response) => {
     const campaign = await Campaign.findOne({ _id: request.body.campaignId, status: "live" });
     if (!campaign) throw new AppError("Live campaign not found", 404);
+    if (await Submission.exists({ campaign: campaign.id, postUrl: request.body.postUrl })) {
+      throw new AppError("This post has already been submitted to this campaign", 409);
+    }
 
     const submission = await Submission.create({
       campaign: campaign.id,

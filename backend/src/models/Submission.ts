@@ -13,6 +13,7 @@ const submissionSchema = new Schema(
 
 submissionSchema.index({ creator: 1, createdAt: -1 });
 submissionSchema.index({ campaign: 1, creator: 1 });
+submissionSchema.index({ campaign: 1, postUrl: 1 }, { unique: true });
 
 export type SubmissionDocument = InferSchemaType<typeof submissionSchema> & {
   campaign: Types.ObjectId;
