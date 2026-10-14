@@ -1,4 +1,4 @@
-import { readAuth } from "./auth";
+import { clearAuth, readAuth } from "./auth";
 import type { Campaign, Submission, User } from "../types";
 
 const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/+$/, "");
@@ -17,6 +17,10 @@ const request = async <T>(path: string, options: RequestOptions = {}): Promise<T
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
   const payload = await response.json().catch(() => ({}));
+  if (response.status === 401 && auth && !path.startsWith("/api/auth")) {
+    clearAuth();
+    window.location.replace("/auth");
+  }
   if (!response.ok) throw new Error(payload.error ?? "Request failed");
   return payload as T;
 };
