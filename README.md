@@ -2,6 +2,13 @@
 
 A full-stack creator marketplace tool for tracking campaign performance and milestone-based payouts. Brands create campaigns with fixed budgets; creators submit Instagram or YouTube posts and earn according to the highest view milestone reached.
 
+## Live Demo
+
+| Service | URL |
+| --- | --- |
+| Frontend (Vercel) | https://memed-campaign-payout-tracker-gules.vercel.app |
+| API (Railway) | https://fantastic-presence-production.up.railway.app (health check: `/health`) |
+
 ## Highlights
 
 - JWT authentication with separate **brand** and **creator** roles
@@ -91,11 +98,41 @@ Open [http://localhost:3000](http://localhost:3000), create a Brand or Creator a
 | `GET` | `/api/campaigns/mine` | View the authenticated Brand's campaigns |
 | `POST` | `/api/submissions` | Submit a post as a Creator |
 | `GET` | `/api/submissions/mine` | View a Creator's posts and total earnings |
-| `PATCH` | `/api/submissions/:id/views` | Simulate a platform view-count update |
+| `PATCH` | `/api/submissions/:id/views` | Simulate a platform view-count update (any signed-in user; no role check) |
 
-## Payout Rules
+### Simulating view updates
 
-Each milestone is a total payout target, rather than a cumulative reward. A submission earns the difference between its current payout and the highest crossed milestone. When a campaign has insufficient funds, the remaining budget is awarded as the submission's final partial payout.
+There is no UI for view counts, because they would normally come from Instagram or YouTube. Use the `PATCH` endpoint with a JWT from signup or login. Either role works. The submission id is returned by `POST /api/submissions` and listed by `GET /api/submissions/mine`.
+
+```bash
+curl -X PATCH "https://fantastic-presence-production.up.railway.app/api/submissions/<submissionId>/views" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"views": 60000}'
+```
+
+With the ladder 10K → ₹500, 50K → ₹2,000, 100K → ₹5,000, the response looks like:
+
+```json
+{
+  "submission": { "_id": "...", "views": 60000, "payoutGranted": 2000 },
+  "payout": { "eligiblePayout": 2000, "additionalPayout": 2000, "totalGranted": 2000 },
+  "campaign": { "id": "...", "totalBudget": 10000, "budgetSpent": 2000, "remainingBudget": 8000 }
+}
+```
+
+## Assumptions & Decisions
+
+- **Milestones are total targets, not stacked rewards.** Each update pays the difference between the highest milestone crossed and what the submission has already been paid.
+- **Crossing several milestones in one update** pays only the highest milestone crossed. For example, a jump from 0 to 60K views pays ₹2,000, not ₹500 + ₹2,000.
+- **Budget running out mid-payout:** the remaining budget is paid as a partial final payout. After that the campaign pays nothing more.
+- **View counts only increase.** A lower value than the stored count is rejected with `400`.
+- **Milestone ladders** must have strictly ascending view thresholds and payouts, and no single milestone may exceed the campaign budget.
+- **One submission per post per campaign.** Submitting the same post URL to the same campaign again is rejected with `409`, so a post is never paid twice.
+- **Exhausted campaigns** stay listed as live. New submissions are accepted but cannot earn.
+- **Amounts** are whole rupees (integers).
+- **View-update endpoint:** it requires a valid JWT but no specific role, matching the brief's "no role check needed". This keeps anonymous callers from changing payouts.
+- **Optional items:** Redis caching, view-spike flagging and Docker were not attempted. The concurrency stretch goal was implemented instead.
 
 Campaign spend and submission payout are updated together in a MongoDB transaction. Repeated updates never duplicate a payout, and concurrent updates cannot push the campaign above its budget.
 
