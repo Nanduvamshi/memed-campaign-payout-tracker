@@ -33,7 +33,8 @@ const updateWithinTransaction = async (submissionId: string, views: number, sess
   submission.payoutGranted += additionalPayout;
   campaign.budgetSpent += additionalPayout;
 
-  await Promise.all([submission.save({ session }), campaign.save({ session })]);
+  await submission.save({ session });
+  await campaign.save({ session });
 
   return {
     submission,
