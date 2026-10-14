@@ -7,4 +7,7 @@ const start = async () => {
   app.listen(env.PORT, () => console.log(`API listening on port ${env.PORT}`));
 };
 
-void start();
+start().catch((error) => {
+  console.error("Failed to start API", error);
+  process.exit(1);
+});
