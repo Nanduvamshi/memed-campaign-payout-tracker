@@ -4,7 +4,7 @@ import { Submission } from "../models/Submission";
 import { AppError } from "../lib/errors";
 
 export const highestEligiblePayout = (milestones: Milestone[], views: number): number =>
-  milestones.reduce((highest, milestone) => (views >= milestone.viewThreshold ? milestone.payout : highest), 0);
+  milestones.reduce((highest, milestone) => (views >= milestone.viewThreshold ? Math.max(highest, milestone.payout) : highest), 0);
 
 export const cappedAdditionalPayout = (
   eligiblePayout: number,

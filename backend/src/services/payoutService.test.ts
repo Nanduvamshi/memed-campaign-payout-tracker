@@ -12,6 +12,12 @@ describe("payout calculation", () => {
     expect(highestEligiblePayout(milestones, 5_000)).toBe(0);
   });
 
+  it("does not depend on milestone order", () => {
+    const reversed = [...milestones].reverse();
+    expect(highestEligiblePayout(reversed, 150_000)).toBe(5_000);
+    expect(highestEligiblePayout(reversed, 60_000)).toBe(2_000);
+  });
+
   it("awards only the unpaid increment and respects remaining budget", () => {
     expect(cappedAdditionalPayout(5_000, 2_000, 9_000)).toBe(3_000);
     expect(cappedAdditionalPayout(5_000, 500, 700)).toBe(700);
